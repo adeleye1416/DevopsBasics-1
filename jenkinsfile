@@ -1,44 +1,82 @@
-
 pipeline{
 
- tools{
- jdk 'myjava'
- maven 'mymaven'
- }
+   agent any
 
- agent any
- stages{
- stage('Clone Repo')
- {
- steps{
- git 'https://github.com/adeleye1416/DevopsBasics-1.git'
- }
- }
+	//create dockerhub credential in github with your dockerhub Username and Password/Token
+	environment {
+		DOCKERHUB_CREDENTIALS=credentials('dockerhub')
+	}
+	
+	stages {
 
- stage('Compile the code')
- {
- steps{
+		stage('gitclone') {
 
- sh 'mvn compile'
- }
- }
+		      steps {
+		         git 'https://github.com/adeleye1416/DevopsBasics-1.git'
+		      }
+		}
+		
+		stage('Build') {
+			steps {
+			
+			   sh 'docker build -t adeleye1416/class_app:${BUILD_NUMBER} .'
+			}
+		}
+		
+		stage('Login') {
+		
+			steps {
+			   sh 'echo $DOCKERHUB_CREDENTIALS_PSW | docker login --username adeleye1416 --password-stdin'    
+			}
+		}
 
- stage('Code Analysis')
- {
- steps{
- sh 'mvn pmd:pmd'
- }
+		stage('Push') {
+			
+			steps {
+			   sh 'docker push adeleye1416/class_app:${BUILD_NUMBER}'
+			}
+		}
+		}
+	
+	post {
+	    always {
+		sh 'docker logout'
+	    }
+    }
 
- }
+}
 
- stage('Build the artifact')
- {
- steps{
- sh 'mvn package'
- }
- }
- }
-} 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
